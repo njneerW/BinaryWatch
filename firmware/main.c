@@ -121,10 +121,12 @@
 #define PB0_PORT        PORTB
 #define PB0_PORT_BITS   PORTBbits
 #define PB0_PIN         RB0
+#define PB0             PB0_PORT_BITS.PB0_PIN
 
 #define PB1_PORT        PORTA
 #define PB1_PORT_BITS   PORTAbits
 #define PB1_PIN         RA0
+#define PB1             PB1_PORT_BITS.PB1_PIN
 
 #define L_ROW_PORT      PORTC
 #define L_ROW_PORT_PINS PORTCbits
@@ -136,6 +138,12 @@
 #define L_L4_PIN        RC3
 #define L_L5_PIN        RC7
 #define L_L6_PIN        RB1
+#define LED_L1          L_ROW_PORT_PINS.L_L1_PIN
+#define LED_L2          L_ROW_PORT_PINS.L_L2_PIN
+#define LED_L3          L_ROW_PORT_PINS.L_L3_PIN
+#define LED_L4          L_ROW_PORT_PINS.L_L4_PIN
+#define LED_L5          L_ROW_PORT_PINS.L_L5_PIN
+#define LED_L6          L6_PORT_PINS.L_L6_PIN
 
 #define U_ROW_PORT      PORTB
 #define U_ROW_PORT_PINS PORTBbits
@@ -143,11 +151,17 @@
 #define U_L2_PIN        RB2
 #define U_L3_PIN        RB3
 #define U_L4_PIN        RB4
+#define LED_U1          U_ROW_PORT_PINS.U_L1_PIN
+#define LED_U2          U_ROW_PORT_PINS.U_L1_PIN
+#define LED_U3          U_ROW_PORT_PINS.U_L1_PIN
+#define LED_U4          U_ROW_PORT_PINS.U_L1_PIN
 
 #define DT_PORT         PORTB
 #define DT_PORT_PINS    PORTBbits
-#define DT_TIME_PIN     RB6
-#define DT_DATE_PIN     RB7
+#define DT_TIME_PIN     RB7
+#define DT_DATE_PIN     RB6
+#define LED_DATE        DT_PORT_PINS.DT_DATE_PIN
+#define LED_TIME        DT_PORT_PINS.DT_TIME_PIN
 
 //
 // Type for mapping out bits of dleep sleep persistent memory byte0
@@ -232,16 +246,16 @@ int displayTime(void);
 //#pragma interrupt HiISR
 void HiISR(void)
 {
-    PORTBbits.RB6 = 1;
-    PORTBbits.RB7 = 1;
+    LED_DATE = 1;
+    LED_TIME = 1;
     //while(1);
 }
 
 //#pragma interruptlow LoISR
 void LoISR(void)
 {
-    PORTBbits.RB6 = 1;
-    PORTBbits.RB7 = 1;
+    LED_DATE = 1;
+    LED_TIME = 1;
     //while(1);
 }
 
@@ -505,7 +519,7 @@ int debouncePB0(void (*pfnPress)(void), void (*pfnHold)(void))
 {
     unsigned int uiTime;
 
-    if((g_ucPB0State == PB_STATE_IDLE) && !PORTBbits.RB0)
+    if((g_ucPB0State == PB_STATE_IDLE) && !PB0)
     {
         g_ucPB0State = PB_STATE_DEBOUNCING;
         TMR0H = 0;
@@ -514,7 +528,7 @@ int debouncePB0(void (*pfnPress)(void), void (*pfnHold)(void))
         return 1;
     }
 
-    if(PORTBbits.RB0)
+    if(PB0)
     {
         //
         // If the button isn't pressed and we're in idle state, go back to bed
@@ -637,7 +651,7 @@ int debouncePB1(void (*pfnPress)(void), void (*pfnHold)(void))
 {
     static unsigned long ulTime = 0;
 
-    if((g_ucPB1State == PB_STATE_IDLE) && !PORTAbits.RA0)
+    if((g_ucPB1State == PB_STATE_IDLE) && !PB1)
     {
         g_ucPB1State = PB_STATE_DEBOUNCING;
         TMR1H = 0;
@@ -647,7 +661,7 @@ int debouncePB1(void (*pfnPress)(void), void (*pfnHold)(void))
         return 1;
     }
 
-    if(PORTAbits.RA0)
+    if(PB1)
     {
         if(g_ucPB1State == PB_STATE_IDLE)
         {
@@ -972,8 +986,8 @@ void HoldPB1(void)
         T3CONbits.TMR3ON = 1;
 
         g_sDSGPR1.dispState = DISP_STATE_SET_TIME;
-        PORTBbits.RB6 = 0;
-        PORTBbits.RB7 = 1;
+        LED_DATE = 0;
+        LED_TIME = 1;
     }
 
     return;
@@ -1010,8 +1024,8 @@ void PressPB1(void)
             T3CONbits.TMR3ON = 1;
 
             g_sDSGPR1.dispState = DISP_STATE_SET_DATE;
-            PORTBbits.RB6 = 1;
-            PORTBbits.RB7 = 0;
+            LED_DATE = 1;
+            LED_TIME = 0;
         }
     }
     else if(g_sDSGPR1.dispState == DISP_STATE_SET_DATE)
@@ -1061,12 +1075,12 @@ unsigned char readLower(void)
 {
     unsigned char retVal;
 
-    retVal = PORTCbits.RC6;
-    retVal |= (PORTCbits.RC5 << 1);
-    retVal |= (PORTCbits.RC4 << 2);
-    retVal |= (PORTCbits.RC3 << 3);
-    retVal |= (PORTCbits.RC7 << 4);
-    retVal |= (PORTBbits.RB1 << 5);
+    retVal = LED_L1;
+    retVal |= (LED_L2 << 1);
+    retVal |= (LED_L3 << 2);
+    retVal |= (LED_L4 << 3);
+    retVal |= (LED_L5 << 4);
+    retVal |= (LED_L6 << 5);
 
     return retVal;
 }
@@ -1084,10 +1098,10 @@ unsigned char readUpper(void)
 {
     unsigned char retVal;
 
-    retVal = PORTBbits.RB5;
-    retVal |= (PORTBbits.RB2 << 1);
-    retVal |= (PORTBbits.RB3 << 2);
-    retVal |= (PORTBbits.RB4 << 3);
+    retVal = LED_U1;
+    retVal |= (LED_U2 << 1);
+    retVal |= (LED_U3 << 2);
+    retVal |= (LED_U4 << 3);
 
     return retVal;
 }
@@ -1107,57 +1121,59 @@ void updateRows(unsigned char ucUpperRow, unsigned char ucLowerRow)
 {
     //TODO: Update these to use the pin and port macros we created for all of
     //      these.
+    //DONE: JTW: replaced PORTxbits.Rxn references with macro'd LED_<row><num>
+    //           references.
 
     //
     // Turn the lower row LEDs (minutes, days, or seconds) on or off
     //
     if(ucLowerRow & 0x01)
     {
-        PORTCbits.RC6 = 1;
+        LED_L1 = 1;
     }
     else
     {
-        PORTCbits.RC6 = 0;
+        LED_L1 = 0;
     }
     if(ucLowerRow & 0x02)
     {
-        PORTCbits.RC5 = 1;
+        LED_L2 = 1;
     }
     else
     {
-        PORTCbits.RC5 = 0;
+        LED_L2 = 0;
     }
     if(ucLowerRow & 0x04)
     {
-        PORTCbits.RC4 = 1;
+        LED_L3 = 1;
     }
     else
     {
-        PORTCbits.RC4 = 0;
+        LED_L3 = 0;
     }
     if(ucLowerRow & 0x08)
     {
-        PORTCbits.RC3 = 1;
+        LED_L4 = 1;
     }
     else
     {
-        PORTCbits.RC3 = 0;
+        LED_L4 = 0;
     }
     if(ucLowerRow & 0x10)
     {
-        PORTCbits.RC7 = 1;
+        LED_L5 = 1;
     }
     else
     {
-        PORTCbits.RC7 = 0;
+        LED_L5 = 0;
     }
     if(ucLowerRow & 0x20)
     {
-        PORTBbits.RB1 = 1;
+        LED_L6 = 1;
     }
     else
     {
-        PORTBbits.RB1 = 0;
+        LED_L6 = 0;
     }
 
     //
@@ -1165,35 +1181,35 @@ void updateRows(unsigned char ucUpperRow, unsigned char ucLowerRow)
     //
     if(ucUpperRow & 0x01)
     {
-        PORTBbits.RB5 = 1;
+        LED_U1 = 1;
     }
     else
     {
-        PORTBbits.RB5 = 0;
+        LED_U1 = 0;
     }
     if(ucUpperRow & 0x02)
     {
-        PORTBbits.RB2 = 1;
+        LED_U2 = 1;
     }
     else
     {
-        PORTBbits.RB2 = 0;
+        LED_U2 = 0;
     }
     if(ucUpperRow & 0x04)
     {
-        PORTBbits.RB3 = 1;
+        LED_U3 = 1;
     }
     else
     {
-        PORTBbits.RB3 = 0;
+        LED_U3 = 0;
     }
     if(ucUpperRow & 0x08)
     {
-        PORTBbits.RB4 = 1;
+        LED_U4 = 1;
     }
     else
     {
-        PORTBbits.RB4 = 0;
+        LED_U4 = 0;
     }
 }
 
@@ -1254,46 +1270,48 @@ int displayTime(void)
     // seconds, D and T LEDs should be off.
     //
     // TODO: replace these with port and pin macros
+    // DONE: JTW: replaced PORTxbits.Rxn references with macro'd LED_<row><num>
+    //           references.
     if(g_sDSGPR1.dispState == DISP_STATE_SET_TIME)
     {
-        PORTBbits.RB7 = 1;
-        PORTBbits.RB6 = 0;
+        LED_TIME = 1;
+        LED_DATE = 0;
     }
     else if(g_sDSGPR1.dispState == DISP_STATE_SET_DATE)
     {
-        PORTBbits.RB6 = 1;
-        PORTBbits.RB7 = 0;
+        LED_DATE = 1;
+        LED_TIME = 0;
     }
     else if(g_sDSGPR1.dispState == DISP_STATE_TIME_H)
     {
         if(ucSecond & 0x1)
         {
-            PORTBbits.RB7 = 1;
-            PORTBbits.RB6 = 0;
+            LED_TIME = 1;
+            LED_DATE = 0;
         }
         else
         {
-            PORTBbits.RB7 = 0;
-            PORTBbits.RB6 = 0;
+            LED_TIME = 0;
+            LED_DATE = 0;
         }
     }
     else if(g_sDSGPR1.dispState == DISP_STATE_DATE)
     {
         if(ucSecond & 0x1)
         {
-            PORTBbits.RB7 = 0;
-            PORTBbits.RB6 = 1;
+            LED_TIME = 0;
+            LED_DATE = 1;
         }
         else
         {
-            PORTBbits.RB7 = 0;
-            PORTBbits.RB6 = 0;
+            LED_TIME = 0;
+            LED_DATE = 0;
         }
     }
     else
     {
-        PORTBbits.RB7 = 0;
-        PORTBbits.RB6 = 0;
+        LED_TIME = 0;
+        LED_DATE = 0;
     }
 
     //
@@ -1315,7 +1333,7 @@ int displayTime(void)
         {
             if(ucUpperRow >= 12)
             {
-                PORTBbits.RB6 = 1;
+                LED_DATE = 1;
             }
         }
 
@@ -1822,7 +1840,7 @@ void main(void) {
             //
             // determine polarity of PB0, so we can know what edge to wake on
             //
-            if(PORTBbits.RB0)
+            if(PB0)
             {
                 INTCON2bits.INTEDG0 = 0;
             }
