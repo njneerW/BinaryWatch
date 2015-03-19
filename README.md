@@ -1,7 +1,9 @@
 # BinaryWatch
 TODO: code is complex enough that it should not be contained entirely in one
         file.  Seperate out by functionality.
+
         *display functions
+
         *RTCC functions
         *deep sleep functions
         *timer functions
