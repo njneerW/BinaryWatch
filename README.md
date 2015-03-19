@@ -9,6 +9,7 @@ Seperate out by functionality.
     *timer functions
 
 Debounce function is actually pretty useful.  Make a library out of it.
+
     *See if the timers are similar enough that a timer struct can be passed
      in to make the function more generic
     *Pass in the port for the button to debounce (w/ active high v low)
